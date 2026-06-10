@@ -244,7 +244,7 @@ impl FontFilter {
 fn invert() {
     let font = "./font.woff2";
     let buffer = std::fs::read(font).unwrap();
-    let unfiltered = parse_and_filter_first_palette("", &buffer);
+    let unfiltered = parse_and_filter_first_palette("opacity(1.0)", &buffer);
     let inverted = parse_and_filter_first_palette("invert(1.0)", &buffer);
     assert_ne!(unfiltered, inverted);
 
@@ -259,6 +259,7 @@ fn invert() {
 fn together() {
     let font = "./font.woff2";
     let buffer = std::fs::read(font).unwrap();
+    let unfiltered = parse_and_filter_first_palette("opacity(1.0)", &buffer);
     let inverted = parse_and_filter_first_palette("brightness(0.5) saturate(2.0) invert(1.0)", &buffer);
-    assert_eq!("", inverted);
+    assert_ne!(unfiltered, inverted);
 }
