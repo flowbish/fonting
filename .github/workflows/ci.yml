@@ -2,9 +2,14 @@ name: Cargo Build & Test
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+     - main
+
+  # Allow manual run
+  workflow_dispatch:
 
 env: 
   CARGO_TERM_COLOR: always
