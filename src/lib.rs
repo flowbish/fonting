@@ -212,6 +212,11 @@ fn filter_first_palette(operations: &Vec<Operation>, buffer: &[u8]) -> String {
     output
 }
 
+pub fn parse_and_filter_first_palette(operations: &str, buffer: &[u8]) -> String {
+    let operations = parse_operations(operations).unwrap().1;
+    filter_first_palette(&operations, buffer)
+}
+
 #[wasm_bindgen]
 pub struct FontFilter {
     filter: Option<Vec<Operation>>
@@ -239,14 +244,14 @@ impl FontFilter {
 fn invert() {
     let font = "./font.woff2";
     let buffer = std::fs::read(font).unwrap();
-    let unfiltered = filter_first_palette("", &buffer);
-    let inverted = filter_first_filter_first_palettepalette("invert(1.0)", &buffer);
+    let unfiltered = parse_and_filter_first_palette("", &buffer);
+    let inverted = parse_and_filter_first_palette("invert(1.0)", &buffer);
     assert_ne!(unfiltered, inverted);
 
-    let uninverted = filter_first_palette("invert(0.0)", &buffer);
+    let uninverted = parse_and_filter_first_palette("invert(0.0)", &buffer);
     assert_eq!(unfiltered, uninverted);
 
-    let uninverted = filter_first_palette("invert(1.0) invert(1.0)", &buffer);
+    let uninverted = parse_and_filter_first_palette("invert(1.0) invert(1.0)", &buffer);
     assert_eq!(unfiltered, uninverted);
 }
 
@@ -254,6 +259,6 @@ fn invert() {
 fn together() {
     let font = "./font.woff2";
     let buffer = std::fs::read(font).unwrap();
-    let inverted = filter_first_palette("brightness(0.5) saturate(2.0) invert(1.0)", &buffer);
+    let inverted = parse_and_filter_first_palette("brightness(0.5) saturate(2.0) invert(1.0)", &buffer);
     assert_eq!("", inverted);
 }

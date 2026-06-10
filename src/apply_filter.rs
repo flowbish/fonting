@@ -1,6 +1,6 @@
 use std::env;
 
-use fonting::filter_first_palette;
+use fonting::parse_and_filter_first_palette;
 
 fn main() -> Result<(), u8> {
     let args: Vec<String> = env::args().collect();
@@ -11,7 +11,7 @@ fn main() -> Result<(), u8> {
     let font = &args[1];
     let filter = &args[2];
     let buffer = std::fs::read(font).unwrap();
-    let css = filter_first_palette(&filter, &buffer);
+    let css = parse_and_filter_first_palette(filter, &buffer);
     println!("{css}"); 
 
     Ok(())
