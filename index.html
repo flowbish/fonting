@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>hello-wasm example</title>
+    <style>
+      #dropzone {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+    height: 150px;
+
+    font-size: calc(2 * var(--font-size));
+}
+
+.no-dragover {
+    background: var(--light-accent-color);
+    border: 2px solid var(--accent-color);
+    border-radius: 10px;
+}
+
+.dragover {
+    background: var(--accent-color);
+    border: 2px solid var(--light-accent-color);
+    border-radius: 10px;
+}
+
+#file-input {
+    display: none;
+}
+
+#preview {
+  width: 500px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  list-style: none;
+  padding: 0;
+}
+
+#preview li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  width: 100%;
+  height: 100px;
+}
+    </style>
+  </head>
+  <body>
+
+    <style id="custom-style"></style>
+
+    <label id="dropzone" class="customFont no-dragover">
+        Upload font
+        <input id="file-input" type="file" />
+    </label>
+
+    <button id="clear-button">Clear</button>
+
+    <label>
+      Filter
+      <input id="filter-input" type="text" />
+    </label>
+
+    <script type="module">
+
+        import init, { FontFilter } from "./pkg/fonting.js";
+
+        let dropzone;
+
+        dropzone = document.getElementById("dropzone");
+        dropzone.addEventListener("dragenter", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+        });
+        dropzone.addEventListener("dragover", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            dropzone.className = "customFont dragover";
+        });
+        dropzone.addEventListener("dragleave", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            dropzone.className = "customFont no-dragover";
+        });
+
+
+        init().then(() => {
+          dropzone.addEventListener("drop", (e) => {
+              if ([...e.dataTransfer.items].some((item) => item.kind === "file")) {
+                  e.preventDefault();
+                  dropzone.className = "customFont no-dragover";
+
+                  const files = [...e.dataTransfer.items]
+                      .map((item) => item.getAsFile())
+                      .filter((file) => file);
+                  previewFont(files);
+              }
+          });
+          
+          const fileInput = document.getElementById("file-input");
+          const filterInput = document.getElementById("filter-input");
+          fileInput.addEventListener("change", (e) => {
+              previewFont(filterInput.value, e.target.files);
+          });
+          filterInput.addEventListener("change", (e) => {
+              previewFont(e.target.value, fileInput.files);
+          });
+
+
+          const preview = document.getElementById("preview");
+          const customStyle = document.getElementById("custom-style");
+          let fontUrls = [];
+
+          function previewFont(filter_str, files) {
+              if (files.length < 1) {
+                return;
+              }
+
+              let file = files[0];
+              const fontUrl = URL.createObjectURL(file);
+              fontUrls.push(fontUrl);
+
+              let filter = new FontFilter(filter_str);
+
+              if (!filter.parse_successful()) {
+                console.log(`unsuccessful parse: ${filter_str}`);
+                return;
+              }
+
+              file.arrayBuffer().then((buf) => {
+                let arr = new Uint8Array(buf);
+                const overrideColors = filter.generate_palette(arr);
+                
+                customStyle.innerHTML = `
+                @font-face {
+                    font-family: "customFont";
+                    src: url("${fontUrl}");
+                }
+                  
+                @font-palette-values --custom {
+                    font-family: "customFont";
+                    ${overrideColors};
+                }
+            
+                .customFont {
+                    font-family: "customFont";
+                    font-palette: --custom;
+                }
+                `;
+              });
+          }
+
+          const clearButton = document.getElementById("clear-button");
+          clearButton.addEventListener("click", () => {
+              for (const url of fontUrls) {
+                  URL.revokeObjectURL(url);
+              }
+              fontUrls = [];
+              customStyle.innerHTML = "";
+          });
+        });
+
+    </script>
+  </body>
+</html>

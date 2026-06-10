@@ -1,0 +1,16 @@
+[package]
+name = "fonting"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[[bin]]
+name = "apply-filter"
+path = "src/apply_filter.rs"
+
+[dependencies]
+allsorts = "0.16"
+wasm-bindgen = "0.2"
+nom = "8.0"
